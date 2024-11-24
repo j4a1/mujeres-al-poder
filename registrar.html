@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manzanas Del Cuidado</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="Encabezado">
+    <a href="#" class="logo"> 
+      <img class="logo-img" src="./img/Man.png" alt="Logo">
+      <h2 class="nombre-empresa">Manzanas del Cuidado</h2>
+    </a>
+  </header>
+
+  <video src="./videos/manzanas.mp4" autoplay muted loop class="video"></video>
+
+  <div class="contenedor-form">
+    <h1>Registrar Datos</h1>
+    <form action="http://localhost:3000/crear" method="POST">
+      <label for="nombre_usu">Nombre</label>
+      <input type="text" name="nombre_usu" placeholder="Nombre" required pattern="[A-Za-z\s]+">
+
+      <label for="documento">Documento</label>
+      <input type="text" name="documento" placeholder="Documento" required>
+
+      <label for="tipo_documento">Tipo de Documento</label>
+      <select name="tipo_documento" id="tipo_documento" required>
+        <option value="cc">Cédula</option>
+        <option value="ti">Tarjeta</option>
+      </select>
+
+      <label for="fk_Codigo_manzanas">Manzana</label>
+      <select name="fk_Codigo_manzanas" id="fk_Codigo_manzanas" required>
+        <option value="1">Bosa</option>
+        <option value="2">Usme</option>
+        <option value="3">Suba</option>
+      </select>
+
+      <label for="contrasena">Contraseña</label>
+      <input type="password" name="contrasena" required>
+      
+
+      <button type="submit">Registrar</button>
+    </form>
+  </div>
+
+  <footer>
+    <p>2024. Derechos Reservados</p>
+  </footer>
+</body>
+</html>

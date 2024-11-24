@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manzanas Del Cuidado</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header class="Encabezado">
+    <a href="#" class="logo">
+      <img src="./img/Man.png" alt="Logo de Manzanas del Cuidado">
+      <h2 class="nombre-empresa">Manzanas del Cuidado</h2>
+    </a>
+  </header>
+
+  <div class="contenedor-form">
+    <h1>Bienvenido <span id="nombreUsuario"></span></h1>
+
+    <video src="./videos/manzanas.mp4" autoplay muted loop class="video"></video>
+
+    <div class="acciones">
+      <button id="DesplegarServicios" class="accion-boton">Servicios</button>
+      <br><br>
+      <input type="button" value="Cancelar servicio" class="boton2">
+      <br><br>
+      <form action="/cerrar-sesion" method="GET">
+        <input type="submit" value="Cerrar sesión" class="boton2">
+    </form>
+      <br><br>
+      <button id="btnServicios" class="accion-boton">Ver Servicios Guardados</button>
+    </div>
+
+    <!-- Formulario para servicios -->
+    <form id="formularios">
+      <div id="servicios" style="display: none;">
+        <table id="Tabla_servicios">
+          <thead>
+            <tr>
+              <th class="Seleccionar">Servicios</th>
+              <th class="Seleccionar">Seleccionar</th>
+            </tr>
+          </thead>
+          <tbody id="Lista_servicios"></tbody>
+        </table>
+        <br>
+        <input type="datetime-local" name="fechaHora" required>
+        <br><br>
+        <button type="submit">Guardar Servicios</button>
+      </div>
+    </form>
+
+    <form action="http://localhost:3000/Listar-servicios-usuario" id="Servicio_Guardados">
+      <div id="Servicios_2" style="display: none;">
+        <table id="Tabla_servicios_guardados">
+          <thead>
+            <tr>
+              <th>Servicios</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="servicios_lista"></tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+
+  <footer>
+    <p>2024. Derechos Reservados</p>
+  </footer>
+
+</body>
+</html>
+
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+  // Obtener el nombre del usuario
+  const xhrNombreUsuario = new XMLHttpRequest();
+  xhrNombreUsuario.open('GET', '/obtener-usuario', true);
+  xhrNombreUsuario.onreadystatechange = function() {
+    if (xhrNombreUsuario.readyState === 4 && xhrNombreUsuario.status === 200) {
+      const usuario = JSON.parse(xhrNombreUsuario.responseText);
+      document.getElementById('nombreUsuario').textContent = `${usuario.nombre}`;
+    } else if (xhrNombreUsuario.readyState === 4) {
+      console.error('No se pudo obtener el usuario');
+    }
+  };
+  xhrNombreUsuario.send();
+
+  // Variables para desplegar los servicios
+  const DesplegarServicios = document.getElementById('DesplegarServicios');
+  const Lista_servicios = document.getElementById('Lista_servicios');
+  const servicios = document.getElementById('servicios');
+
+  // Botón para obtener los servicios
+  DesplegarServicios.addEventListener('click', () => {
+    const xhrObtener = new XMLHttpRequest();
+    xhrObtener.open('POST', '/obtener_Servicios_Usu', true);
+    xhrObtener.setRequestHeader('Content-Type', 'application/json');
+
+    xhrObtener.onreadystatechange = function () {
+      if (xhrObtener.readyState === 4 && xhrObtener.status === 200) {
+        const data = JSON.parse(xhrObtener.responseText);
+        console.log('Servicios recibidos:', data.servicios);
+
+        if (Array.isArray(data.servicios) && data.servicios.length > 0) {
+          // Limpiar la lista antes de agregar nuevos servicios
+          Lista_servicios.innerHTML = '';
+          data.servicios.forEach(servicio => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${servicio}</td>
+              <td><input type="checkbox" name="servicios" value="${servicio}"></td>
+            `;
+            Lista_servicios.appendChild(row);
+          });
+          servicios.style.display = 'block';
+        } else {
+          Lista_servicios.innerHTML = '<tr><td colspan="2">No hay servicios disponibles.</td></tr>';
+        }
+      } else if (xhrObtener.readyState === 4) {
+        console.error('Error al obtener los servicios. Status:', xhrObtener.status);
+      }
+    };
+    xhrObtener.send();
+  });
+
+  // Enviar los servicios seleccionados cuando el formulario se envíe
+  document.getElementById('formularios').addEventListener('submit', function(event) {
+    event.preventDefault(); // Evitar el envío por defecto del formulario
+
+    // Obtener los servicios seleccionados (checkboxes marcados)
+    const serviciosseleccionados = Array.from(this.querySelectorAll('input[name="servicios"]:checked'))
+        .map(checkbox => checkbox.value);
+
+    // Obtener la fecha y hora seleccionada
+    const fh = this.elements['fechaHora'].value;
+
+    // Validación de los datos
+    if (serviciosseleccionados.length === 0) {
+      alert('Por favor, selecciona al menos un servicio.');
+      return;
+    }
+    if (!fh) {
+      alert('Por favor, selecciona una fecha y hora.');
+      return;
+    }
+
+    // Verificar qué datos se enviarán
+    console.log('Servicios seleccionados:', serviciosseleccionados);
+    console.log('Fecha y hora seleccionada:', fh);
+
+    // Crear la solicitud XMLHttpRequest
+    const xhrGuardarservicio = new XMLHttpRequest();
+    xhrGuardarservicio.open('POST', '/guardar-Servicios_Usu', true);
+    xhrGuardarservicio.setRequestHeader('Content-Type', 'application/json');
+
+    xhrGuardarservicio.onreadystatechange = function() {
+      if (xhrGuardarservicio.readyState === 4 && xhrGuardarservicio.status === 200) {
+        alert("Servicios Guardados");
+        window.location.reload();
+      } else if (xhrGuardarservicio.readyState === 4) {
+        console.error('No se pudo guardar los servicios:', xhrGuardarservicio.status, xhrGuardarservicio.statusText);
+      }
+    };
+
+    xhrGuardarservicio.send(JSON.stringify({
+      servicios: serviciosseleccionados,
+      fechaHora: fh
+    }));
+  });
+
+  // Botón para ver servicios guardados
+  const Servicios_2 = document.getElementById('Servicios_2');
+  const btnServicios = document.getElementById('btnServicios');
+  const servicios_lista = document.getElementById('servicios_lista');
+
+  btnServicios.addEventListener('click', () => {
+    console.log('El botón funciona');
+    const xhrObtenerServicioGuardado = new XMLHttpRequest();
+    xhrObtenerServicioGuardado.open('POST', '/Listar-servicios-usuario', true);
+    xhrObtenerServicioGuardado.onreadystatechange = function () {
+      if (xhrObtenerServicioGuardado.readyState === 4) {
+        if (xhrObtenerServicioGuardado.status === 200) {
+          const data = JSON.parse(xhrObtenerServicioGuardado.responseText);
+
+          if (data.servicios_lista && data.servicios_lista.length > 0) {
+            servicios_lista.innerHTML = ''; // Limpiar la tabla
+
+            data.servicios_lista.forEach(servicio => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${servicio.Nombre_servicio}</td>
+                <td>${servicio.Dia_Hora}</td>
+              `;
+              servicios_lista.appendChild(row);
+            });
+
+            Servicios_2.style.display = 'block';
+          } else {
+            alert('No tienes servicios guardados');
+          }
+        } else {
+          console.error('Error al obtener los servicios guardados');
+        }
+      }
+    };
+    xhrObtenerServicioGuardado.send();
+  });
+});
+
+  </script>
+</body>
+</html>

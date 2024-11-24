@@ -1,0 +1,178 @@
+DROP DATABASE mujeres;
+CREATE DATABASE mujeres DEFAULT CHARACTER SET = 'utf8mb4';
+
+-- Usar la base de datos
+USE mujeres;
+
+
+CREATE TABLE manzanas (
+    Codigo_manzanas INT(5) PRIMARY KEY AUTO_INCREMENT,
+    nombre_man SET('bosa', 'suba', 'usme'),
+    Localidad VARCHAR(30),
+    Direccion VARCHAR(50)
+);
+
+
+CREATE TABLE servicios (
+    Codigo_servicios INT(5) PRIMARY KEY AUTO_INCREMENT,
+    Nombre_servicio VARCHAR(30),
+    Tipo_servicio VARCHAR(30),
+    Descripcion VARCHAR(100)
+);
+
+
+CREATE TABLE manzanas_servicios (
+    fk_codigo_manzanas1 INT(5),
+    fk_codigo_servicios1 INT(5),
+    PRIMARY KEY (fk_codigo_manzanas1, fk_codigo_servicios1),
+    FOREIGN KEY (fk_codigo_manzanas1) REFERENCES manzanas(Codigo_manzanas),
+    FOREIGN KEY (fk_codigo_servicios1) REFERENCES servicios(Codigo_servicios)
+);
+
+
+CREATE TABLE usuario (
+    Codigo_mujer INT(5) PRIMARY KEY AUTO_INCREMENT,
+    tipo_documento ENUM('cc', 'ti') NOT NULL, 
+    documento INT(10) NOT NULL, 
+    nombre_usu VARCHAR(30) NOT NULL,
+    Apellidos VARCHAR(30),
+    contrasena VARCHAR(255) NOT NULL,
+    Telefono INT(10),
+    Email VARCHAR(100),
+    Ciudad VARCHAR(50),
+    Direccion VARCHAR(50),
+    Ocupacion VARCHAR(30),
+    Rol ENUM('Usuario', 'Administrador') DEFAULT 'Usuario', _--DEFAULT PARA DEFINIR QUE LOS USUARIOS QUE SE CREEN DESDE LA PAGINA SON USUARIO NORMALES
+    fk_Codigo_manzanas INT(5),
+    FOREIGN KEY (fk_Codigo_manzanas) REFERENCES manzanas(Codigo_manzanas),
+    fk_Codigo_servicios2 INT(5),
+    FOREIGN KEY (fk_Codigo_servicios2) REFERENCES servicios(Codigo_servicios)
+);
+
+
+
+CREATE TABLE solicitudes (
+    Codigo_solicitud INT(5) PRIMARY KEY AUTO_INCREMENT,
+    Municipios VARCHAR(30),
+    Hora_asistencia DATETIME,  -- Se usa DATETIME para almacenar fecha y hora
+    Nombre_establecimiento VARCHAR(100),
+    Responsable_establecimiento VARCHAR(30),
+    Direccion_establecimiento VARCHAR(50),
+    fk_Codigo_mujer2 INT(10),
+    FOREIGN KEY (fk_Codigo_mujer2) REFERENCES usuario(Codigo_mujer),
+    fk_Codigo_servicios INT(5),
+    FOREIGN KEY (fk_Codigo_servicios) REFERENCES servicios(Codigo_servicios)
+);
+
+
+INSERT INTO manzanas (nombre_man, Localidad, Direccion) 
+VALUES 
+    ('Manzana Bosa #2', 'Bosa', 'Kr falsa 12'),
+    ('Manzana Suba #19', 'Suba', 'Kr falsa 22'),
+    ('Manzana Usme #43', 'Usme', 'Kr falsa 32');
+
+
+INSERT INTO servicios (Nombre_servicio, Tipo_servicio, Descripcion) 
+VALUES 
+    ('Yoga', 'Bienestar', 'Clases para mejorar la flexibilidad y la relajación'),
+    ('Gimnasia', 'Deportes', 'Clases para fortalecer el cuerpo y mejorar la salud física'),
+    ('Terapia Ocupacional', 'Salud', 'Sesiones de rehabilitación física y psicológica'),
+    ('Técnicas de Respiración', 'Bienestar', 'Entrenamiento para mejorar la respiración y reducir el estrés'),
+    ('Fotografía', 'Arte', 'Clases para aprender las técnicas de la fotografía artística');
+
+
+INSERT INTO manzanas_servicios (fk_codigo_manzanas1, fk_codigo_servicios1) 
+VALUES 
+    (1, 2), (1, 4), 
+    (1, 5), (2, 1), 
+    (3, 3), (3, 5);
+
+
+-- Administrador 1
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 987654321, 'Juan', 'Pérez', '9876xyz', 3107654321, 'juan@gmail.com', 'Bogotá', 'Calle Falsa 123', 'Ingeniero', 'Administrador', NULL, NULL);
+-- Administrador 2
+
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 123456789, 'Ana', 'Gómez', 'admin123', 3101234567, 'ana@gmail.com', 'Medellín', 'Avenida Siempre Viva 456', 'Gerente', 'Administrador', NULL, NULL);
+-- Administrador 3
+
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 112233445, 'Carlos', 'Martínez', 'admin321', 3109876543, 'carlos@gmail.com', 'Cali', 'Carrera 7 # 12-34', 'Director', 'Administrador', NULL, NULL);
+-- Usuario 1
+
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 556677889, 'Luis', 'Ramírez', 'user123', 3105556677, 'luis@gmail.com', 'Barranquilla', 'Calle 10 # 56-78', 'Estudiante', 'Usuario', NULL, NULL);
+
+-- Usuario 2
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 334455667, 'María', 'López', 'user456', 3103334455, 'maria@gmail.com', 'Pereira', 'Avenida 8 # 22-45', 'Docente', 'Usuario', NULL, NULL);
+
+-- Usuario 3
+INSERT INTO usuario (tipo_documento, documento, nombre_usu, Apellidos, contrasena, Telefono, Email, Ciudad, Direccion, Ocupacion, Rol, fk_Codigo_manzanas, fk_Codigo_servicios2)
+VALUES ('cc', 223344556, 'Pedro', 'Sánchez', 'user789', 3102233445, 'pedro@gmail.com', 'Bucaramanga', 'Calle 25 # 78-90', 'Abogado', 'Usuario', NULL, NULL);
+
+
+
+
+-- Agregar restricción de unicidad al campo Documento en la tabla usuario
+ALTER TABLE usuario ADD UNIQUE (documento);
+
+-- Ver los datos de la tabla manzanas
+SELECT * FROM manzanas;
+
+-- Ver los datos de la tabla usuario
+SELECT * FROM usuario;
+
+-- Ver los datos de la tabla servicios
+SELECT * FROM servicios;
+
+-- Ver los datos de la tabla manzanas_servicios
+SELECT * FROM manzanas_servicios;
+
+-- Ver los datos de la tabla solicitudes
+SELECT * FROM solicitudes;
+
+SHOW COLUMNS FROM solicitudes;
+
+
+-- Consulta para insertar una solicitud
+INSERT INTO solicitudes (
+    Municipios, Hora_asistencia, Nombre_establecimiento, Responsable_establecimiento, 
+    Direccion_establecimiento, fk_Codigo_mujer2, fk_Codigo_servicios
+) 
+VALUES 
+    ('Bogotá', '2024-11-16 10:30:00', 'Establecimiento X', 'Carlos Pérez', 'Calle 123', 1, 2);
+
+
+
+SELECT * FROM solicitudes WHERE fk_Codigo_mujer2 = (SELECT Codigo_mujer FROM usuario WHERE documento = '44');
+
+SELECT * FROM usuario WHERE documento = 112233445;
+
+SELECT * FROM usuario WHERE documento = 987654321 AND contrasena = '9876xyz';
+
+-- para insertar varios admin
+SELECT documento, COUNT(*) FROM usuario GROUP BY documento HAVING COUNT(*) > 1;
+
+SELECT nombre_usu FROM usuario WHERE documento = '123456789' AND contrasena = 'admin123';
+
+SELECT * FROM usuario WHERE documento = '80' AND tipo_documento = 'CC' AND contrasena = '80';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
