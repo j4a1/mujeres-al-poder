@@ -35,8 +35,38 @@ function cargarUsuarios(){
             email.textContent=usuario.Email
             fila.appendChild(email)
 
+            const accion=document.createElement('td')
+            
+            const botonEliminar=document.createElement('button')
+            botonEliminar.textContent='Eliminar'
+            botonEliminar.onclick=()=> eliminarUsuario(usuario)
+            accion.appendChild(botonEliminar)
+            fila.appendChild(accion)
+
+            
+            const botonActualizar=document.createElement('button')
+            botonActualizar.textContent='Actualizar'
+            accion.appendChild(botonActualizar)
+            fila.appendChild(accion)
+
+
             tablaUsuarios.appendChild(fila)
 
         });
     })
+}
+
+function eliminarUsuario(usuario) {
+    fetch('http://localhost:3000/eliminarUsuario', {
+        method: 'delete',
+        headers: {
+            'Content-Type': 'application/json', 
+        },
+        body: JSON.stringify({usuarioId: usuario.Codigo_mujer })
+    })
+    .then((res)=> res.json())
+    .then((datos)=>{
+
+    })
+    
 }
