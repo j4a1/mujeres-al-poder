@@ -299,6 +299,26 @@ app.get('/obtenerUsuarios',async(req, res)=>{
 
         
 })
+//eliminar usuario
+app.delete('/eliminarUsuario',async(req,res)=>{
+    try{
+        const {Codigo_usuario}=req.body;
+        const query ='DELETE FROM usuario WHERE Codigo_usuario=?';
+        const conect = await mysql2.createConnection(db);  
+        const [borrarUsuarios] = await conect.execute(query,[Codigo_usuario]);
+        res.status(200).json(borrarUsuarios)
+    }catch (error) {
+        console.error("Error en el servidor:", error);
+        res.status(500).send("Error en el servidor");
+    }
+})
+
+
+app.put('/putUsuario', sync(req, res)=>{
+    try{
+        const query=''
+    }
+})
 
 // ruta para cerrar sesion
 app.get('/cerrar-sesion', (req, res) => {
