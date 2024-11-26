@@ -333,7 +333,42 @@ app.get('/cerrar-sesion', (req, res) => {
         res.redirect('/login.html');  
     });
 });
+// Ruta para actualizar un servicio
+app.put('/api/servicios/:id', async (req, res) => {
+    try {
+        const servicioId = parseInt(req.params.id);
+        const { nombre, descripcion } = req.body;
 
+        // Verificación de los datos de entrada
+        if (!nombre || !descripcion) {
+            return res.status(400).json({ error: 'Faltan datos: nombre y descripción son obligatorios.' });
+        }
+
+        // Conectar a la base de datos
+        const conect = await mysql2.createConnection(db);
+
+        // Verificar si el servicio existe
+        const [servicioExistente] = await conect.execute('SELECT * FROM servicios WHERE Codigo_servicios = ?', [servicioId]);
+
+        if (servicioExistente.length === 0) {
+            return res.status(404).json({ error: 'Servicio no encontrado.' });
+        }
+
+        // Actualizar el servicio
+        await conect.execute(
+            'UPDATE servicios SET Nombre_servicio = ?, Descripcion = ? WHERE Codigo_servicios = ?',
+            [nombre, descripcion, servicioId]
+        );
+
+        // Responder con el servicio actualizado
+        res.status(200).json({ message: 'Servicio actualizado exitosamente', servicio: { id: servicioId, nombre, descripcion } });
+
+        await conect.end();  // Cerrar la conexión
+    } catch (error) {
+        console.error('Error al procesar la solicitud:', error);
+        res.status(500).json({ error: 'Error en el servidor, por favor intenta más tarde.' });
+    }
+});
 // Apertura del servidor
 app.listen(3000, () => {
     console.log('Servidor Node.js escuchando en el puerto 3000');
