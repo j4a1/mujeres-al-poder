@@ -189,6 +189,160 @@ app.post('/obtener_Servicios_Usu', async (req, res) => {
     }
 });
 
+
+app.get('/obtener-usuario', (req, res) => {
+    const usuario = req.session.usuario;
+    if (usuario) {
+        res.json({ nombre: usuario });
+    } else {
+        res.status(401).send('Usuario no autenticado');
+    }
+});
+
+// Ruta para obtener servicios de un usuario
+app.post('/obtener_Servicios_Usu', async (req, res) => {
+    const usuario = req.session.usuario;
+
+    if (!usuario) {
+        return res.status(401).send("Sesión no válida");
+    }
+
+    try {
+        const conect = await mysql2.createConnection(db);
+        const [datos] = await conect.execute(`
+            SELECT servicios.Nombre_servicio
+            FROM servicios
+            INNER JOIN manzanas_servicios on manzanas_servicios.fk_codigo_servicios1 = servicios.Codigo_servicios
+            INNER JOIN manzanas ON manzanas.Codigo_manzanas = manzanas_servicios.fk_codigo_manzanas1
+            INNER JOIN usuario on manzanas.Codigo_manzanas = usuario.fk_Codigo_manzanas
+            WHERE usuario.nombre_usu = ?`, [usuario]);
+
+        res.json({ servicios: datos.map(hijo => hijo.Nombre_servicio) });
+        await conect.end();
+    } catch (error) {
+        console.error("Error en el servidor:", error);
+        res.status(500).send("Error en el servidor");
+    }
+});
+
+
+// Ruta para guardar servicios del usuario
+app.post('/guardar-Servicios_Usu', async (req, res) => {
+    const { servicios, fechaHora } = req.body;
+
+    try {
+        if (!servicios || servicios.length === 0 || !fechaHora) {
+            return res.status(400).send("Datos faltantes: servicios o fecha y hora");
+        }
+
+        if (!req.session.documento) {
+            return res.status(401).send("Sesión no válida");
+        }
+
+        const conect = await mysql2.createConnection(db);
+
+        // Obtener Código_mujer
+        const [usuarioData] = await conect.execute(
+            'SELECT Codigo_mujer FROM usuario WHERE documento = ?',
+            [req.session.documento]
+        );
+        if (usuarioData.length === 0) {
+            return res.status(404).send("Usuario no encontrado");
+        }
+        const Codigo_mujer = usuarioData[0].Codigo_mujer;
+
+      
+        const formattedFechaHora = new Date(fechaHora).toISOString().slice(0, 19).replace("T", " ");
+
+        for (let servicio of servicios) {
+            // Obtener Código_servicios
+            const [servicioData] = await conect.execute(
+                'SELECT Codigo_servicios FROM servicios WHERE Nombre_servicio = ?',
+                [servicio]
+            );
+            if (servicioData.length === 0) {
+                return res.status(404).send(`Servicio ${servicio} no encontrado`);
+            }
+            const Codigo_servicios = servicioData[0].Codigo_servicios;
+
+            // Validar que no haya valores undefined
+            if (!formattedFechaHora || !Codigo_mujer || !Codigo_servicios) {
+                console.error('Datos inválidos:', { formattedFechaHora, Codigo_mujer, Codigo_servicios });
+                return res.status(400).send("Datos inválidos para la consulta");
+            }
+
+            // Insertar en solicitudes
+            await conect.execute(
+                'INSERT INTO solicitudes (Hora_asistencia, fk_Codigo_mujer2, fk_Codigo_servicios) VALUES (?, ?, ?)',
+                [formattedFechaHora, Codigo_mujer, Codigo_servicios]
+            );
+        }
+
+        res.status(200).send('Servicios guardados correctamente');
+    } catch (error) {
+        console.error('Error al guardar los servicios:', error.message);
+        res.status(500).send('Error interno del servidor');
+    }
+});
+
+
+
+// Ruta para listar servicios de un usuario
+app.post('/Listar-servicios-usuario', async (req, res) => {
+    const Documento = req.session.documento; 
+
+    try {
+        const conect = await mysql2.createConnection(db);  // Crear la conexión a la base de datos
+
+       
+        const [resultados] = await conect.execute(
+            `SELECT s.Nombre_servicio, 
+                    DATE_FORMAT(so.Hora_asistencia, '%Y-%m-%d %H:%i:%s') AS Dia_Hora
+             FROM servicios s
+             INNER JOIN solicitudes so ON s.Codigo_servicios = so.fk_Codigo_servicios
+             INNER JOIN usuario u ON u.Codigo_mujer = so.fk_Codigo_mujer2
+             WHERE u.documento = ?`, 
+            [Documento]
+        );
+
+        console.log("Servicios obtenidos:", resultados);
+
+        if (resultados.length > 0) {
+            // Si hay servicios asociados al usuario
+            res.json({ servicios_lista: resultados });
+        } else {
+            // Si no hay servicios, enviar mensaje adecuado
+            res.status(404).send('No tienes servicios guardados');
+        }
+
+        await conect.end(); // Cerrar la conexión
+
+    } catch (error) {
+        console.error("Error en el servidor:", error);
+        res.status(500).send("Error en el servidor");
+    }
+});
+
+
+// Ruta para eliminar los servicios
+app.delete('/eliminar-servicio/:codigoServicio', async (req, res) => {
+    const { codigoServicio } = req.params;
+  
+    try {
+      const [result] = await pool.query('DELETE FROM servicios WHERE Codigo_servicios = ?', [codigoServicio]);
+  
+      if (result.affectedRows > 0) {
+        res.status(200).send({ mensaje: 'Servicio eliminado correctamente' });
+      } else {
+        res.status(404).send({ mensaje: 'Servicio no encontrado' });
+      }
+    } catch (error) {
+      console.error('Error al eliminar el servicio:', error);
+      res.status(500).send({ mensaje: 'Error al eliminar el servicio' });
+    }
+  });
+
+
 // Ruta para guardar servicios del usuario
 app.post('/guardar-Servicios_Usu', async (req, res) => {
     const { servicios, fechaHora } = req.body;
