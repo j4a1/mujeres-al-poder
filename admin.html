@@ -17,17 +17,40 @@
     <div class="container">
         <h1>Panel de Administración</h1>
 
-        <div class="card">
-            <h3>Gestión de Usuarios</h3>
-            <p>Desde aquí podrás ver y gestionar todos los usuarios registrados en el sistema.</p>
-            <a href="./gestion-usuarios.html" class="button">Ver usuarios</a>
-        </div>
+            <!-- Gestión de Servicios -->
+            <div class="card">
+                <h3>Gestión de Servicios</h3>
+                <button id="btnCrear" class="button">Crear Servicio</button>
+                <button id="btnActualizar" class="button">Actualizar Servicio</button>
+            </div>
+    
+            <!-- Formulario de creación de servicio -->
+            <div id="crearServicio" style="display:none;">
+                <h3>Crear Servicio</h3>
+                <form id="formCrearServicio">
+                    <input type="text" id="nombreServicio" placeholder="Nombre del servicio" required>
+                    <textarea id="descripcionServicio" placeholder="Descripción del servicio" required></textarea>
+                    <button type="submit">Crear</button>
+                </form>
+            </div>
+    
+            <!-- Formulario de actualización de servicio -->
+            <div id="actualizarServicio" style="display:none;">
+                <h3>Actualizar Servicio</h3>
+                <select id="selectServicios">
+                    <!-- Aquí se cargarán los servicios existentes -->
+                </select>
+                <input type="text" id="nombreNuevoServicio" placeholder="Nuevo nombre del servicio" required>
+                <textarea id="descripcionNuevoServicio" placeholder="Nueva descripción del servicio" required></textarea>
+                <button id="btnActualizarServicio">Actualizar</button>
+            </div>
+    
+            <div id="serviciosUsuario">
+                <h3>Servicios Creados por el Usuario</h3>
+                <!-- Aquí se mostrarán los servicios creados por el usuario -->
+            </div>
 
-        <div class="card">
-            <h3>Gestión de Servicios</h3>
-            <p>Administra los servicios disponibles para los usuarios y sus detalles.</p>
-            <a href="/gestion-servicios" class="button">Ver servicios</a>
-        </div>
+            
 
         <div class="card">
             <h3>Gestión de Solicitudes</h3>
@@ -36,6 +59,132 @@
         </div>
 
     </div>
+ 
 
+
+    <script>
+
+     // Mostrar los servicios cuando la página cargue
+     function mostrarServiciosUsuario() {
+            fetch('/api/servicios')
+                .then(response => response.json())
+                .then(services => {
+                    const divServicios = document.getElementById('serviciosUsuario');
+                    divServicios.innerHTML = '';  // Limpiar la sección
+                    if (services.length === 0) {
+                        divServicios.innerHTML = '<p>No tienes servicios creados.</p>';
+                    } else {
+                        services.forEach(servicio => {
+                            const div = document.createElement('div');
+                            div.textContent = `Nombre: ${servicio.nombre} - Descripción: ${servicio.descripcion}`;
+                            divServicios.appendChild(div);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al cargar servicios:', error);
+                    alert('No se pudieron cargar los servicios. Intenta de nuevo más tarde.');
+                });
+        }
+
+        // Crear un servicio
+        document.getElementById('btnCrear').addEventListener('click', function() {
+            document.getElementById('crearServicio').style.display = 'block';
+            document.getElementById('actualizarServicio').style.display = 'none';
+        });
+
+        document.getElementById('formCrearServicio').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('nombreServicio').value;
+            const descripcion = document.getElementById('descripcionServicio').value;
+
+            fetch('/crear-servicio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre, descripcion })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message); // Mostrar mensaje desde el backend
+                mostrarServiciosUsuario(); // Actualizar la lista de servicios
+                document.getElementById('formCrearServicio').reset();
+                document.getElementById('crearServicio').style.display = 'none'; // Ocultar formulario
+            })
+            .catch(error => {
+                console.error('Error al crear servicio:', error);
+                alert('Error al crear el servicio. Intenta de nuevo.');
+            });
+        });
+
+        // Cargar servicios para actualizar
+        function cargarServicios() {
+            fetch('/api/servicios')
+                .then(response => response.json())
+                .then(services => {
+                    const select = document.getElementById('selectServicios');
+                    select.innerHTML = ''; // Limpiar el selector
+                    if (services.length === 0) {
+                        alert('No hay servicios disponibles para actualizar.');
+                        return;
+                    }
+                    services.forEach(servicio => {
+                        const option = document.createElement('option');
+                        option.value = servicio.id;
+                        option.textContent = servicio.nombre;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar servicios:', error);
+                });
+        }
+
+        // Actualizar un servicio
+        document.getElementById('btnActualizar').addEventListener('click', function() {
+            document.getElementById('crearServicio').style.display = 'none';
+            document.getElementById('actualizarServicio').style.display = 'block';
+            cargarServicios();  // Cargar los servicios existentes al seleccionar "Actualizar Servicio"
+        });
+
+        document.getElementById('btnActualizarServicio').addEventListener('click', function() {
+            const servicioId = document.getElementById('selectServicios').value;
+            const nuevoNombre = document.getElementById('nombreNuevoServicio').value;
+            const nuevaDescripcion = document.getElementById('descripcionNuevoServicio').value;
+
+            if (!servicioId) {
+                alert('Por favor, selecciona un servicio para actualizar.');
+                return;
+            }
+
+            if (!nuevoNombre || !nuevaDescripcion) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            const data = { nombre: nuevoNombre, descripcion: nuevaDescripcion };
+
+            fetch(`/api/servicios/${servicioId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Servicio actualizado');
+                mostrarServiciosUsuario(); // Actualizar la lista de servicios
+                document.getElementById('actualizarServicio').style.display = 'none'; // Ocultar el formulario
+            })
+            .catch(error => {
+                console.error('Error al actualizar servicio:', error);
+                alert('Error al actualizar el servicio. Intenta de nuevo.');
+            });
+        });
+
+        // Mostrar los servicios creados al cargar la página
+        mostrarServiciosUsuario();
+
+
+
+    </script>
 </body>
 </html>
